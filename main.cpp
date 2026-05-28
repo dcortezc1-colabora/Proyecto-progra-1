@@ -8,15 +8,12 @@
 
 using namespace std;
 
-// COLORES ANSI
 #define RESET    "\033[0m"
 #define ROJO     "\033[31m"
 #define VERDE    "\033[32m"
 #define AMARILLO "\033[33m"
-#define AZUL     "\033[34m"
 #define CYAN     "\033[36m"
 
-// FUNCIONES AUXILIARES
 void limpiar_pantalla() {
     system("cls");
 }
@@ -33,10 +30,9 @@ void mostrar_titulo(string titulo) {
     cout << RESET;
 }
 
-// CAMBIA TU CONTRASEÑA AQUÍ
+// CAMBIA TU CONTRASEÑA
 MySQLConexion db("root", "Root123", "biblioteca_db");
 
-// CLASE ESTUDIANTE
 class Estudiante {
 private:
     string nombre;
@@ -46,7 +42,6 @@ private:
 public:
     void crear() {
         cout << AMARILLO << "\nCREAR ESTUDIANTE\n" << RESET;
-
         cin.ignore();
 
         cout << "Nombre: ";
@@ -59,7 +54,6 @@ public:
         getline(cin, correo);
 
         vector<string> columnas = {"nombre", "carnet", "correo"};
-
         EloquentORM estudiante(db, "estudiantes", columnas);
 
         estudiante.set("nombre", nombre);
@@ -67,7 +61,7 @@ public:
         estudiante.set("correo", correo);
 
         if (estudiante.create()) {
-            cout << VERDE << "\nEstudiante guardado correctamente en MySQL.\n" << RESET;
+            cout << VERDE << "\nEstudiante guardado correctamente.\n" << RESET;
         } else {
             cout << ROJO << "\nError al guardar estudiante.\n" << RESET;
         }
@@ -77,7 +71,6 @@ public:
         cout << AMARILLO << "\nLISTADO DE ESTUDIANTES\n" << RESET;
 
         vector<string> columnas = {"nombre", "carnet", "correo"};
-
         EloquentORM estudiante(db, "estudiantes", columnas);
 
         vector<map<string, string>> registros = estudiante.getAll();
@@ -89,9 +82,66 @@ public:
             cout << "Correo: " << fila["correo"] << endl;
         }
     }
+
+    void actualizar() {
+        int id;
+        cout << AMARILLO << "\nACTUALIZAR ESTUDIANTE\n" << RESET;
+
+        cout << "ID del estudiante: ";
+        cin >> id;
+        cin.ignore();
+
+        vector<string> columnas = {"nombre", "carnet", "correo"};
+        EloquentORM estudiante(db, "estudiantes", columnas);
+
+        if (!estudiante.find(id)) {
+            cout << ROJO << "\nEstudiante no encontrado.\n" << RESET;
+            return;
+        }
+
+        cout << "Nuevo nombre: ";
+        getline(cin, nombre);
+
+        cout << "Nuevo carnet: ";
+        getline(cin, carnet);
+
+        cout << "Nuevo correo: ";
+        getline(cin, correo);
+
+        estudiante.set("nombre", nombre);
+        estudiante.set("carnet", carnet);
+        estudiante.set("correo", correo);
+
+        if (estudiante.update()) {
+            cout << VERDE << "\nEstudiante actualizado correctamente.\n" << RESET;
+        } else {
+            cout << ROJO << "\nError al actualizar estudiante.\n" << RESET;
+        }
+    }
+
+    void eliminar() {
+        int id;
+        cout << AMARILLO << "\nELIMINAR ESTUDIANTE\n" << RESET;
+
+        cout << "ID del estudiante: ";
+        cin >> id;
+
+        vector<string> columnas = {"nombre", "carnet", "correo"};
+        EloquentORM estudiante(db, "estudiantes", columnas);
+
+        if (!estudiante.find(id)) {
+            cout << ROJO << "\nEstudiante no encontrado.\n" << RESET;
+            return;
+        }
+
+        if (estudiante.remove()) {
+            cout << VERDE << "\nEstudiante eliminado correctamente.\n" << RESET;
+        } else {
+            cout << ROJO << "\nNo se pudo eliminar. Puede tener prestamos asociados.\n" << RESET;
+        }
+    }
 };
 
-// CLASE LIBRO
 class Libro {
 private:
     string titulo;
@@ -101,7 +151,6 @@ private:
 public:
     void crear() {
         cout << AMARILLO << "\nCREAR LIBRO\n" << RESET;
-
         cin.ignore();
 
         cout << "Titulo: ";
@@ -113,7 +162,6 @@ public:
         disponible = "1";
 
         vector<string> columnas = {"titulo", "autor", "disponible"};
-
         EloquentORM libro(db, "libros", columnas);
 
         libro.set("titulo", titulo);
@@ -121,7 +169,7 @@ public:
         libro.set("disponible", disponible);
 
         if (libro.create()) {
-            cout << VERDE << "\nLibro guardado correctamente en MySQL.\n" << RESET;
+            cout << VERDE << "\nLibro guardado correctamente.\n" << RESET;
         } else {
             cout << ROJO << "\nError al guardar libro.\n" << RESET;
         }
@@ -131,7 +179,6 @@ public:
         cout << AMARILLO << "\nLISTADO DE LIBROS\n" << RESET;
 
         vector<string> columnas = {"titulo", "autor", "disponible"};
-
         EloquentORM libro(db, "libros", columnas);
 
         vector<map<string, string>> registros = libro.getAll();
@@ -148,9 +195,62 @@ public:
             }
         }
     }
+
+    void actualizar() {
+        int id;
+        cout << AMARILLO << "\nACTUALIZAR LIBRO\n" << RESET;
+
+        cout << "ID del libro: ";
+        cin >> id;
+        cin.ignore();
+
+        vector<string> columnas = {"titulo", "autor", "disponible"};
+        EloquentORM libro(db, "libros", columnas);
+
+        if (!libro.find(id)) {
+            cout << ROJO << "\nLibro no encontrado.\n" << RESET;
+            return;
+        }
+
+        cout << "Nuevo titulo: ";
+        getline(cin, titulo);
+
+        cout << "Nuevo autor: ";
+        getline(cin, autor);
+
+        libro.set("titulo", titulo);
+        libro.set("autor", autor);
+
+        if (libro.update()) {
+            cout << VERDE << "\nLibro actualizado correctamente.\n" << RESET;
+        } else {
+            cout << ROJO << "\nError al actualizar libro.\n" << RESET;
+        }
+    }
+
+    void eliminar() {
+        int id;
+        cout << AMARILLO << "\nELIMINAR LIBRO\n" << RESET;
+
+        cout << "ID del libro: ";
+        cin >> id;
+
+        vector<string> columnas = {"titulo", "autor", "disponible"};
+        EloquentORM libro(db, "libros", columnas);
+
+        if (!libro.find(id)) {
+            cout << ROJO << "\nLibro no encontrado.\n" << RESET;
+            return;
+        }
+
+        if (libro.remove()) {
+            cout << VERDE << "\nLibro eliminado correctamente.\n" << RESET;
+        } else {
+            cout << ROJO << "\nNo se pudo eliminar. Puede tener prestamos asociados.\n" << RESET;
+        }
+    }
 };
 
-// CLASE PRESTAMO
 class Prestamo {
 private:
     string estudianteId;
@@ -161,7 +261,6 @@ private:
 public:
     void crear() {
         cout << AMARILLO << "\nCREAR PRESTAMO\n" << RESET;
-
         cin.ignore();
 
         cout << "ID del estudiante: ";
@@ -207,7 +306,7 @@ public:
             libro.set("disponible", "0");
             libro.update();
 
-            cout << VERDE << "\nPrestamo guardado correctamente en MySQL.\n" << RESET;
+            cout << VERDE << "\nPrestamo guardado correctamente.\n" << RESET;
         } else {
             cout << ROJO << "\nError al guardar prestamo.\n" << RESET;
         }
@@ -232,7 +331,6 @@ public:
         };
 
         EloquentORM prestamo(db, "prestamos", columnas);
-
         vector<map<string, string>> registros = prestamo.raw(consulta).getAll();
 
         for (auto &fila : registros) {
@@ -243,9 +341,47 @@ public:
             cout << "Fecha devolucion: " << fila["fecha_devolucion"] << endl;
         }
     }
+
+    void eliminar() {
+        int id;
+        cout << AMARILLO << "\nELIMINAR PRESTAMO\n" << RESET;
+
+        cout << "ID del prestamo: ";
+        cin >> id;
+
+        vector<string> columnas = {
+            "estudiante_id",
+            "libro_id",
+            "fecha_prestamo",
+            "fecha_devolucion"
+        };
+
+        EloquentORM prestamo(db, "prestamos", columnas);
+
+        if (!prestamo.find(id)) {
+            cout << ROJO << "\nPrestamo no encontrado.\n" << RESET;
+            return;
+        }
+
+        string idLibro = prestamo.get("libro_id");
+
+        if (prestamo.remove()) {
+            vector<string> columnasLibro = {"titulo", "autor", "disponible"};
+            EloquentORM libro(db, "libros", columnasLibro);
+
+            if (libro.find(stoi(idLibro))) {
+                libro.set("disponible", "1");
+                libro.update();
+            }
+
+            cout << VERDE << "\nPrestamo eliminado correctamente.\n" << RESET;
+            cout << VERDE << "El libro fue marcado como disponible.\n" << RESET;
+        } else {
+            cout << ROJO << "\nError al eliminar prestamo.\n" << RESET;
+        }
+    }
 };
 
-// MENUS
 void menu_estudiantes() {
     int opcion;
     Estudiante estudiante;
@@ -256,7 +392,9 @@ void menu_estudiantes() {
 
         cout << "1. Crear estudiante\n";
         cout << "2. Listar estudiantes\n";
-        cout << "3. Volver\n";
+        cout << "3. Actualizar estudiante\n";
+        cout << "4. Eliminar estudiante\n";
+        cout << "5. Volver\n";
 
         cout << "\nSeleccione una opcion: ";
         cin >> opcion;
@@ -270,9 +408,17 @@ void menu_estudiantes() {
                 estudiante.listar();
                 pausar();
                 break;
+            case 3:
+                estudiante.actualizar();
+                pausar();
+                break;
+            case 4:
+                estudiante.eliminar();
+                pausar();
+                break;
         }
 
-    } while (opcion != 3);
+    } while (opcion != 5);
 }
 
 void menu_libros() {
@@ -285,7 +431,9 @@ void menu_libros() {
 
         cout << "1. Crear libro\n";
         cout << "2. Listar libros\n";
-        cout << "3. Volver\n";
+        cout << "3. Actualizar libro\n";
+        cout << "4. Eliminar libro\n";
+        cout << "5. Volver\n";
 
         cout << "\nSeleccione una opcion: ";
         cin >> opcion;
@@ -299,9 +447,17 @@ void menu_libros() {
                 libro.listar();
                 pausar();
                 break;
+            case 3:
+                libro.actualizar();
+                pausar();
+                break;
+            case 4:
+                libro.eliminar();
+                pausar();
+                break;
         }
 
-    } while (opcion != 3);
+    } while (opcion != 5);
 }
 
 void menu_prestamos() {
@@ -314,7 +470,8 @@ void menu_prestamos() {
 
         cout << "1. Crear prestamo\n";
         cout << "2. Listar prestamos\n";
-        cout << "3. Volver\n";
+        cout << "3. Eliminar prestamo\n";
+        cout << "4. Volver\n";
 
         cout << "\nSeleccione una opcion: ";
         cin >> opcion;
@@ -328,9 +485,13 @@ void menu_prestamos() {
                 prestamo.listar();
                 pausar();
                 break;
+            case 3:
+                prestamo.eliminar();
+                pausar();
+                break;
         }
 
-    } while (opcion != 3);
+    } while (opcion != 4);
 }
 
 void menu_principal() {

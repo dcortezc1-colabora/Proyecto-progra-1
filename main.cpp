@@ -105,6 +105,69 @@ public:
     }
 };
 
+class Libro {
+
+private:
+    string titulo;
+    string autor;
+    string disponible;
+
+public:
+
+    void crear() {
+        cout << "\nCREAR LIBRO\n";
+
+        cin.ignore();
+
+        cout << "Titulo: ";
+        getline(cin, titulo);
+
+        cout << "Autor: ";
+        getline(cin, autor);
+
+        disponible = "1";
+
+        vector<string> columnas = {
+            "titulo",
+            "autor",
+            "disponible"
+        };
+
+        EloquentORM libro(db, "libros", columnas);
+
+        libro.set("titulo", titulo);
+        libro.set("autor", autor);
+        libro.set("disponible", disponible);
+
+        if(libro.create()) {
+            cout << "\nLibro guardado correctamente en MySQL.\n";
+        } else {
+            cout << "\nError al guardar libro.\n";
+        }
+    }
+
+    void listar() {
+        cout << "\nLISTADO DE LIBROS\n";
+
+        vector<string> columnas = {
+            "titulo",
+            "autor",
+            "disponible"
+        };
+
+        EloquentORM libro(db, "libros", columnas);
+
+        vector< map<string, string> > registros = libro.getAll();
+
+        for(auto &fila : registros) {
+            cout << "\nID: " << fila["id"] << endl;
+            cout << "Titulo: " << fila["titulo"] << endl;
+            cout << "Autor: " << fila["autor"] << endl;
+            cout << "Disponible: " << fila["disponible"] << endl;
+        }
+    }
+};
+
 // MENU ESTUDIANTES
 void menu_estudiantes() {
 
@@ -141,6 +204,38 @@ void menu_estudiantes() {
     } while(opcion != 3);
 }
 
+void menu_libros() {
+
+    int opcion;
+    Libro libro;
+
+    do {
+        limpiar_pantalla();
+
+        mostrar_titulo("GESTION DE LIBROS");
+
+        cout << "1. Crear libro\n";
+        cout << "2. Listar libros\n";
+        cout << "3. Volver\n";
+
+        cout << "\nSeleccione una opcion: ";
+        cin >> opcion;
+
+        switch(opcion) {
+            case 1:
+                libro.crear();
+                pausar();
+                break;
+
+            case 2:
+                libro.listar();
+                pausar();
+                break;
+        }
+
+    } while(opcion != 3);
+}
+
 // MENU PRINCIPAL
 void menu_principal() {
 
@@ -153,7 +248,8 @@ void menu_principal() {
         mostrar_titulo("SISTEMA DE PRESTAMO DE LIBROS");
 
         cout << "1. Gestion de estudiantes\n";
-        cout << "2. Salir\n";
+        cout << "2. Gestion de libros\n";
+        cout << "3. Salir\n";
 
         cout << "\nSeleccione una opcion: ";
         cin >> opcion;
@@ -165,6 +261,10 @@ void menu_principal() {
                 break;
 
             case 2:
+                menu_libros();
+                break;
+
+            case 3:
                 cout << "\nSaliendo del sistema...\n";
                 break;
 
@@ -173,7 +273,7 @@ void menu_principal() {
                 pausar();
         }
 
-    } while(opcion != 2);
+    } while(opcion != 3);
 }
 
 int main() {

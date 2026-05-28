@@ -8,6 +8,15 @@
 
 using namespace std;
 
+// COLORES ANSI
+#define RESET    "\033[0m"
+#define ROJO     "\033[31m"
+#define VERDE    "\033[32m"
+#define AMARILLO "\033[33m"
+#define AZUL     "\033[34m"
+#define CYAN     "\033[36m"
+
+// FUNCIONES AUXILIARES
 void limpiar_pantalla() {
     system("cls");
 }
@@ -17,13 +26,17 @@ void pausar() {
 }
 
 void mostrar_titulo(string titulo) {
+    cout << CYAN;
     cout << "\n=====================================\n";
     cout << " " << titulo << endl;
     cout << "=====================================\n";
+    cout << RESET;
 }
 
+// CAMBIA TU CONTRASEÑA AQUÍ
 MySQLConexion db("root", "Root123", "biblioteca_db");
 
+// CLASE ESTUDIANTE
 class Estudiante {
 private:
     string nombre;
@@ -32,7 +45,7 @@ private:
 
 public:
     void crear() {
-        cout << "\nCREAR ESTUDIANTE\n";
+        cout << AMARILLO << "\nCREAR ESTUDIANTE\n" << RESET;
 
         cin.ignore();
 
@@ -54,14 +67,14 @@ public:
         estudiante.set("correo", correo);
 
         if (estudiante.create()) {
-            cout << "\nEstudiante guardado correctamente en MySQL.\n";
+            cout << VERDE << "\nEstudiante guardado correctamente en MySQL.\n" << RESET;
         } else {
-            cout << "\nError al guardar estudiante.\n";
+            cout << ROJO << "\nError al guardar estudiante.\n" << RESET;
         }
     }
 
     void listar() {
-        cout << "\nLISTADO DE ESTUDIANTES\n";
+        cout << AMARILLO << "\nLISTADO DE ESTUDIANTES\n" << RESET;
 
         vector<string> columnas = {"nombre", "carnet", "correo"};
 
@@ -78,6 +91,7 @@ public:
     }
 };
 
+// CLASE LIBRO
 class Libro {
 private:
     string titulo;
@@ -86,7 +100,7 @@ private:
 
 public:
     void crear() {
-        cout << "\nCREAR LIBRO\n";
+        cout << AMARILLO << "\nCREAR LIBRO\n" << RESET;
 
         cin.ignore();
 
@@ -107,14 +121,14 @@ public:
         libro.set("disponible", disponible);
 
         if (libro.create()) {
-            cout << "\nLibro guardado correctamente en MySQL.\n";
+            cout << VERDE << "\nLibro guardado correctamente en MySQL.\n" << RESET;
         } else {
-            cout << "\nError al guardar libro.\n";
+            cout << ROJO << "\nError al guardar libro.\n" << RESET;
         }
     }
 
     void listar() {
-        cout << "\nLISTADO DE LIBROS\n";
+        cout << AMARILLO << "\nLISTADO DE LIBROS\n" << RESET;
 
         vector<string> columnas = {"titulo", "autor", "disponible"};
 
@@ -126,11 +140,17 @@ public:
             cout << "\nID: " << fila["id"] << endl;
             cout << "Titulo: " << fila["titulo"] << endl;
             cout << "Autor: " << fila["autor"] << endl;
-            cout << "Disponible: " << fila["disponible"] << endl;
+
+            if (fila["disponible"] == "1") {
+                cout << VERDE << "Disponible: SI\n" << RESET;
+            } else {
+                cout << ROJO << "Disponible: NO\n" << RESET;
+            }
         }
     }
 };
 
+// CLASE PRESTAMO
 class Prestamo {
 private:
     string estudianteId;
@@ -140,7 +160,7 @@ private:
 
 public:
     void crear() {
-        cout << "\nCREAR PRESTAMO\n";
+        cout << AMARILLO << "\nCREAR PRESTAMO\n" << RESET;
 
         cin.ignore();
 
@@ -155,6 +175,19 @@ public:
 
         cout << "Fecha devolucion (YYYY-MM-DD): ";
         getline(cin, fechaDevolucion);
+
+        vector<string> columnasLibro = {"titulo", "autor", "disponible"};
+        EloquentORM libro(db, "libros", columnasLibro);
+
+        if (!libro.find(stoi(libroId))) {
+            cout << ROJO << "\nLibro no encontrado.\n" << RESET;
+            return;
+        }
+
+        if (libro.get("disponible") == "0") {
+            cout << ROJO << "\nEl libro ya esta prestado.\n" << RESET;
+            return;
+        }
 
         vector<string> columnas = {
             "estudiante_id",
@@ -171,36 +204,48 @@ public:
         prestamo.set("fecha_devolucion", fechaDevolucion);
 
         if (prestamo.create()) {
-            cout << "\nPrestamo guardado correctamente en MySQL.\n";
+            libro.set("disponible", "0");
+            libro.update();
+
+            cout << VERDE << "\nPrestamo guardado correctamente en MySQL.\n" << RESET;
         } else {
-            cout << "\nError al guardar prestamo.\n";
+            cout << ROJO << "\nError al guardar prestamo.\n" << RESET;
         }
     }
 
     void listar() {
-        cout << "\nLISTADO DE PRESTAMOS\n";
+        cout << AMARILLO << "\nLISTADO DE PRESTAMOS\n" << RESET;
+
+        string consulta =
+            "SELECT prestamos.id, estudiantes.nombre, libros.titulo, "
+            "prestamos.fecha_prestamo, prestamos.fecha_devolucion "
+            "FROM prestamos "
+            "INNER JOIN estudiantes ON prestamos.estudiante_id = estudiantes.id "
+            "INNER JOIN libros ON prestamos.libro_id = libros.id";
 
         vector<string> columnas = {
-            "estudiante_id",
-            "libro_id",
+            "id",
+            "nombre",
+            "titulo",
             "fecha_prestamo",
             "fecha_devolucion"
         };
 
         EloquentORM prestamo(db, "prestamos", columnas);
 
-        vector<map<string, string>> registros = prestamo.getAll();
+        vector<map<string, string>> registros = prestamo.raw(consulta).getAll();
 
         for (auto &fila : registros) {
             cout << "\nID: " << fila["id"] << endl;
-            cout << "Estudiante ID: " << fila["estudiante_id"] << endl;
-            cout << "Libro ID: " << fila["libro_id"] << endl;
+            cout << "Estudiante: " << fila["nombre"] << endl;
+            cout << "Libro: " << fila["titulo"] << endl;
             cout << "Fecha prestamo: " << fila["fecha_prestamo"] << endl;
             cout << "Fecha devolucion: " << fila["fecha_devolucion"] << endl;
         }
     }
 };
 
+// MENUS
 void menu_estudiantes() {
     int opcion;
     Estudiante estudiante;
@@ -314,10 +359,10 @@ void menu_principal() {
                 menu_prestamos();
                 break;
             case 4:
-                cout << "\nSaliendo del sistema...\n";
+                cout << VERDE << "\nSaliendo del sistema...\n" << RESET;
                 break;
             default:
-                cout << "\nOpcion invalida.\n";
+                cout << ROJO << "\nOpcion invalida.\n" << RESET;
                 pausar();
         }
 
@@ -326,7 +371,7 @@ void menu_principal() {
 
 int main() {
     if (!db.open()) {
-        cout << "Error conectando a MySQL.\n";
+        cout << ROJO << "Error conectando a MySQL.\n" << RESET;
         return 1;
     }
 
